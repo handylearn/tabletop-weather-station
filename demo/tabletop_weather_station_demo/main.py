@@ -77,6 +77,7 @@ try:
     from tabletop_weather_station_demo.tinkerforge.bricklet_lcd_128x64 import BrickletLCD128x64
     from tabletop_weather_station_demo.tinkerforge.bricklet_air_quality import BrickletAirQuality, GetAllValues
     from tabletop_weather_station_demo.tinkerforge.bricklet_outdoor_weather import BrickletOutdoorWeather, GetStationData, GetSensorData
+    from tabletop_weather_station_demo.tinkerforge.bricklet_sound_pressure_level import BrickletSoundPressureLevel
 except ImportError:
     from tinkerforge.ip_connection import IPConnection, Error
     from tinkerforge.bricklet_lcd_128x64 import BrickletLCD128x64
@@ -159,10 +160,12 @@ class TabletopWeatherStation(object):
     lcd128x64 = None
     air_quality = None
     outdoor_weather = None
+    sound_pressure = None
 
     outdoor_weather_station_last_value = {}
     outdoor_weather_sensor_last_value = {}
     air_quality_last_value = None
+    sound_pressure_last_value = None
 
     graph_resolution_index = None
     logging_period_index = None
@@ -196,6 +199,8 @@ class TabletopWeatherStation(object):
         self.last_air_quality_time = 0
         self.last_station_time = 0
         self.last_sensor_time = 0
+        self.last_sound_pressure_value = 0
+        self.last_sound_pressure_time = 0
 
         self.ipcon = IPConnection()
         while self.run_ref[0]:
@@ -291,6 +296,20 @@ class TabletopWeatherStation(object):
                 except Error as e:
                     log.error('Air Quality Bricklet init failed: ' + str(e.description))
                     self.air_quality = None
+            elif device_identifier == BrickletSoundPressureLevel.DEVICE_IDENTIFIER:
+                try:
+                    self.sound_pressure = BrickletSoundPressureLevel(uid, self.ipcon)
+
+                    # Update data once directly on initial enumerate
+                    self.cb_sound_pressure_dezibel(self.sound_pressure.get_decibel())
+
+                    self.sound_pressure.register_callback(self.sound_pressure.CALLBACK_DECIBEL, self.cb_sound_pressure_dezibel)
+                    self.sound_pressure.set_decibel_callback_configuration(1000, False, 'x', 0, 100)
+# TODO
+                    log.info('Sound Pressure Bricklet initialized')
+                except Error as e:
+                    log.error('Sound Pressure Bricklet init failed: ' + str(e.description))
+                    self.sound_pressure = None
             elif device_identifier == BrickletOutdoorWeather.DEVICE_IDENTIFIER:
                 try:
                     self.outdoor_weather = BrickletOutdoorWeather(uid, self.ipcon)
@@ -353,6 +372,14 @@ class TabletopWeatherStation(object):
         if now - self.last_air_quality_time >= TIME_SECONDS[self.logging_period_index]:
             self.vdb.add_data_air_quality(iaq_index, iaq_index_accuracy, temperature, humidity, air_pressure)
             self.last_air_quality_time = now
+    
+    def cb_sound_pressure_dezibel(self, dezibel):
+        self.sound_pressure_last_value = dezibel
+
+        now = time.time()
+        if now - self.last_sound_pressure_time >= TIME_SECONDS[self.logging_period_index]:
+            self.vdb.add_data_sound_pressure(dezibel, 'dummy')
+            self.last_sound_pressure_time = now        
 
 def loop(run_ref, stop_queue):
     vdb = ValueDB(gui)

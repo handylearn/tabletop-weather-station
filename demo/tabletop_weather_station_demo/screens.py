@@ -78,7 +78,8 @@ class IndoorScreen(Screen):
         self.draw_icon(4, 30, icons.IconHumidity)
 
         self.lcd.draw_text(28, 16, self.lcd.FONT_6X8, self.lcd.COLOR_BLACK, '\xF8C')
-        self.lcd.draw_text(26, 46, self.lcd.FONT_6X8, self.lcd.COLOR_BLACK, '%RH')
+#        self.lcd.draw_text(26, 46, self.lcd.FONT_6X8, self.lcd.COLOR_BLACK, '%RH')
+        self.lcd.draw_text(26, 46, self.lcd.FONT_6X8, self.lcd.COLOR_BLACK, 'db')
         self.lcd.draw_text(78, 16, self.lcd.FONT_6X8, self.lcd.COLOR_BLACK, 'mbar')
         self.lcd.draw_text(78, 46, self.lcd.FONT_6X8, self.lcd.COLOR_BLACK, 'IAQ')
 
@@ -91,6 +92,7 @@ class IndoorScreen(Screen):
             return
 
         last_value = self.tws.air_quality_last_value
+        last_sound = self.tws.sound_pressure_last_value
         iaq_value = last_value.iaq_index
 
         temperature = '{0:.2f}'.format(last_value.temperature/100.0)
@@ -101,9 +103,12 @@ class IndoorScreen(Screen):
         pressure    = ' '*(5 - len(pressure)) + pressure
         iaq         = '{0}'.format(iaq_value)
         iaq         = ' '*(3 - len(iaq)) + iaq
+        last_sound    = '{0:.2f}'.format(last_sound/10.0)
+        last_sound    = ' '*(5 - len(last_sound)) + last_sound
 
         self.lcd.draw_text(20, 0,  self.lcd.FONT_6X16, self.lcd.COLOR_BLACK, temperature)
-        self.lcd.draw_text(20, 30, self.lcd.FONT_6X16, self.lcd.COLOR_BLACK, humidity)
+#        self.lcd.draw_text(20, 30, self.lcd.FONT_6X16, self.lcd.COLOR_BLACK, humidity)
+        self.lcd.draw_text(20, 30, self.lcd.FONT_6X16, self.lcd.COLOR_BLACK, last_sound)
         self.lcd.draw_text(68, 0,  self.lcd.FONT_6X16, self.lcd.COLOR_BLACK, pressure)
         self.lcd.draw_text(78, 30, self.lcd.FONT_6X16, self.lcd.COLOR_BLACK, iaq)
 
@@ -138,12 +143,18 @@ class GraphScreen(Screen):
     divisors_sensor      = [10, 1]
     fields_sensor        = ['temperature', 'humidity']
 
-    tables               = ['air_quality', 'station', 'sensor']
+    caption_sound       = ['db']
+    formats_sound       = ['{0:.1f}']
+    divisors_sound      = [10, 1]
+    fields_sound        = ['dezibel']    
 
-    def __init__(self, stations = [], sensors = []):
+    tables               = ['air_quality', 'station', 'sensor', 'sound_pressure']
+
+    def __init__(self, stations = [], sensors = [], sounds = ['dezibel']):
         self.num      = 0
         self.stations = stations
         self.sensors  = sensors
+        self.sounds = sounds
 
     def get_value_properties(self):
         num = self.num
@@ -151,6 +162,11 @@ class GraphScreen(Screen):
         if num < 4:
             return self.caption_air_quality[num], self.formats_air_quality[num], self.divisors_air_quality[num], self.fields_air_quality[num], self.tables[0], None, None
         num -= 4
+
+        if num < 1:
+            # num_icon = (i+1, len(self.sounds), icons.rotate_left_90(icons.IconTabSensor))
+            return self.caption_sound[num], self.formats_sound[num], self.divisors_sound[num], self.fields_sound[num], self.tables[3], None, None
+        num -= 1
 
         for i, station in enumerate(self.stations):
             if num < 4:
@@ -163,11 +179,12 @@ class GraphScreen(Screen):
                 num_icon = (i+1, len(self.sensors), icons.rotate_left_90(icons.IconTabSensor))
                 return self.caption_sensor[num], self.formats_sensor[num], self.divisors_sensor[num], self.fields_sensor[num], self.tables[2], sensor, num_icon
             num -= 2
-
+            
+        print("screen value num out of range")
         return None # This should never be reachable
 
     def get_num_graphs(self):
-        return len(self.caption_air_quality) + len(self.stations)*len(self.caption_station) + len(self.sensors)*len(self.caption_sensor)
+        return len(self.caption_air_quality) + len(self.stations)*len(self.caption_station) + len(self.sensors)*len(self.caption_sensor) + len(self.caption_sound)
 
     def draw_init(self):
         def draw_updown(offset):
@@ -496,7 +513,7 @@ class SettingsScreen(Screen):
 screens = []
 screen_selected = None
 
-def screen_init(initial_init = True, stations = [], sensors = []):
+def screen_init(initial_init = True, stations = [], sensors = [], sounds = []):
     global screens, screen_selected
     if Screen.lcd == None:
         return
@@ -506,7 +523,7 @@ def screen_init(initial_init = True, stations = [], sensors = []):
         Screen.lcd.remove_all_gui()
         Screen.lcd.clear_display()
 
-    screens = [IndoorScreen(), GraphScreen(stations, sensors)]
+    screens = [IndoorScreen(), GraphScreen(stations, sensors, sounds)]
     if stations != []:
         screens.append(StationScreen(stations))
     if sensors != []:
@@ -539,11 +556,12 @@ def screen_update_tabs():
 
     station_keys = list(Screen.tws.outdoor_weather_station_last_value.keys())
     sensor_keys  = list(Screen.tws.outdoor_weather_sensor_last_value.keys())
+    sound_keys  = list('dezibel')
     if ((len(station_keys) > 0) and (station_screen == None)) or \
        ((len(sensor_keys)  > 0) and (sensor_screen == None)) or \
        ((station_screen != None) and (station_keys != station_screen.keys)) or \
        ((station_screen != None) and (sensor_keys  != sensor_screen.keys)):
-       screen_init(False, station_keys, sensor_keys)
+       screen_init(False, station_keys, sensor_keys, sound_keys)
 
 def screen_slider_value(index, value):
     screen_selected.slider_value(index, value)

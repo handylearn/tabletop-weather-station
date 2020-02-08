@@ -35,6 +35,7 @@ except:
 
 class ValueDB:
     air_quality_first_data = None
+    TABLE_SOUND = 'sound_pressure'
 
     def stop(self):
         self.run = False
@@ -156,6 +157,9 @@ class ValueDB:
     def get_data_air_quality(self, num, time_resolution, field):
         return self.get_data(num, time_resolution, field, 'air_quality')
 
+    def get_data_sound_quality(self, num, time_resolution, field):
+        return self.get_data(num, time_resolution, field, TABLE_SOUND)        
+
     def get_data_station(self, num, time_resolution, field, identifier):
         return self.get_data(num, time_resolution, field, 'station', identifier)
 
@@ -251,6 +255,61 @@ class ValueDB:
             INSERT OR IGNORE INTO air_quality_day (iaq_index, iaq_index_accuracy, temperature, humidity, air_pressure)
             VALUES (?, ?, ?, ?, ?)""",
             (iaq_index, iaq_index_accuracy, temperature, humidity, air_pressure)
+        )
+
+        self.db.commit()
+
+    def add_data_sound_pressure(self, dezibel, dummy):
+        if threading.current_thread() != self.thread:
+            self.func_queue.put((self.add_data_sound_pressure, (dezibel, dummy)))
+            return
+
+        self.dbc.execute("""
+            INSERT INTO sound_pressure (dezibel)
+            VALUES (?)""",
+            (dezibel,)
+        )
+
+        self.dbc.execute("""
+            UPDATE sound_pressure_minute
+            SET dezibel          = dezibel + ?,
+                count              = count + 1
+            WHERE time = (strftime('%s', 'now') - (strftime('%s', 'now') % 60))""",
+            (dezibel,)
+        )
+
+        self.dbc.execute("""
+            INSERT OR IGNORE INTO sound_pressure_minute (dezibel)
+            VALUES (?)""",
+            (dezibel,)
+        )
+
+        self.dbc.execute("""
+            UPDATE sound_pressure_hour
+            SET dezibel          = dezibel + ?,
+                count              = count + 1
+            WHERE time = (strftime('%s', 'now') - (strftime('%s', 'now') % 3600))""",
+            (dezibel,)
+        )
+
+        self.dbc.execute("""
+            INSERT OR IGNORE INTO sound_pressure_hour (dezibel)
+            VALUES (?)""",
+            (dezibel,)
+        )
+
+        self.dbc.execute("""
+            UPDATE sound_pressure_day
+            SET dezibel          = dezibel + ?,
+                count              = count + 1
+            WHERE time = (strftime('%s', 'now') - (strftime('%s', 'now') % 86400))""",
+            (dezibel,)
+        )
+
+        self.dbc.execute("""
+            INSERT OR IGNORE INTO sound_pressure_day (dezibel)
+            VALUES (?)""",
+            (dezibel,)
         )
 
         self.db.commit()
@@ -535,6 +594,41 @@ class ValueDB:
                 humidity integer,
                 count integer default 1,
                 UNIQUE(time, identifier)
+            )"""
+        )
+
+        self.dbc.execute("""
+            CREATE TABLE IF NOT EXISTS sound_pressure (
+                id integer primary key,
+                time timestamp default (strftime('%s', 'now')),
+                dezibel integer
+            )"""
+        )
+
+        self.dbc.execute("""
+            CREATE TABLE IF NOT EXISTS sound_pressure_minute (
+                id integer primary key,
+                time timestamp unique default (strftime('%s', 'now') - (strftime('%s', 'now')%60)),
+                dezibel integer,
+                count integer default 1
+            )"""
+        )
+
+        self.dbc.execute("""
+            CREATE TABLE IF NOT EXISTS sound_pressure_hour (
+                id integer primary key,
+                time timestamp unique default (strftime('%s', 'now') - (strftime('%s', 'now')%3600)),
+                dezibel integer,
+                count integer default 1
+            )"""
+        )
+
+        self.dbc.execute("""
+            CREATE TABLE IF NOT EXISTS sound_pressure_day (
+                id integer primary key,
+                time timestamp unique default (strftime('%s', 'now') - (strftime('%s', 'now')%86400)),
+                dezibel integer,
+                count integer default 1
             )"""
         )
 
