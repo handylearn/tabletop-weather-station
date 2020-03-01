@@ -4,3 +4,4 @@ demo/build
 demo/dist
 demo/tabletop_weather_station_demo/frozen_images.py
 demo/tabletop-weather-station-*.deb
+demo/tabletop_weather_station_demo/.tabletop_weather_station_demo.db
