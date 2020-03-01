@@ -10,8 +10,8 @@ See `here <https://www.tinkerforge.com/en/doc/Kits/TabletopWeatherStation/Tablet
 This fork adds suport for the tinkerforge sound pressure sensor.
 
 Currently I have added:
-* current decibel value at first screen insted of humidity.
-* store the decibel value in the sqlite db like all other values
+* current decibel value on the first screen in a new column
+* storing the decibel value in the sqlite db, like all other values
 * graphics screen like the other screens for temperature, humidity, etc.
 
 

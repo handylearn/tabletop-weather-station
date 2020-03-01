@@ -78,13 +78,15 @@ class IndoorScreen(Screen):
         self.draw_icon(4, 30, icons.IconHumidity)
 
         self.lcd.draw_text(28, 16, self.lcd.FONT_6X8, self.lcd.COLOR_BLACK, '\xF8C')
-#        self.lcd.draw_text(26, 46, self.lcd.FONT_6X8, self.lcd.COLOR_BLACK, '%RH')
-        self.lcd.draw_text(26, 46, self.lcd.FONT_6X8, self.lcd.COLOR_BLACK, 'db')
+        self.lcd.draw_text(26, 46, self.lcd.FONT_6X8, self.lcd.COLOR_BLACK, '%RH')
+        self.lcd.draw_text(66, 46, self.lcd.FONT_6X8, self.lcd.COLOR_BLACK, 'db')
         self.lcd.draw_text(78, 16, self.lcd.FONT_6X8, self.lcd.COLOR_BLACK, 'mbar')
-        self.lcd.draw_text(78, 46, self.lcd.FONT_6X8, self.lcd.COLOR_BLACK, 'IAQ')
+        self.lcd.draw_text(82, 46, self.lcd.FONT_6X8, self.lcd.COLOR_BLACK, 'IAQ')
 
         self.lcd.draw_line(0, 26, 127, 26, self.lcd.COLOR_BLACK)
-        self.lcd.draw_line(60, 0, 60, 52, self.lcd.COLOR_BLACK)
+        self.lcd.draw_line(60, 0, 60, 26, self.lcd.COLOR_BLACK)
+        self.lcd.draw_line(48, 26, 48, 52, self.lcd.COLOR_BLACK)
+        self.lcd.draw_line(80, 26, 80, 52, self.lcd.COLOR_BLACK)
         self.draw_update()
 
     def draw_update(self):
@@ -97,20 +99,20 @@ class IndoorScreen(Screen):
 
         temperature = '{0:.2f}'.format(last_value.temperature/100.0)
         temperature = ' '*(5 - len(temperature)) + temperature
-        humidity    = '{0:.2f}'.format(last_value.humidity/100.0)
-        humidity    = ' '*(5 - len(humidity)) + humidity
+        humidity    = '{0:.1f}'.format(last_value.humidity/100.0)
+        humidity    = ' '*(4 - len(humidity)) + humidity
         pressure    = '{0:.2f}'.format(last_value.air_pressure/100.0)
         pressure    = ' '*(5 - len(pressure)) + pressure
         iaq         = '{0}'.format(iaq_value)
         iaq         = ' '*(3 - len(iaq)) + iaq
-        last_sound    = '{0:.2f}'.format(last_sound/10.0)
+        last_sound    = '{0:.1f}'.format(last_sound/10.0)
         last_sound    = ' '*(5 - len(last_sound)) + last_sound
 
         self.lcd.draw_text(20, 0,  self.lcd.FONT_6X16, self.lcd.COLOR_BLACK, temperature)
-#        self.lcd.draw_text(20, 30, self.lcd.FONT_6X16, self.lcd.COLOR_BLACK, humidity)
-        self.lcd.draw_text(20, 30, self.lcd.FONT_6X16, self.lcd.COLOR_BLACK, last_sound)
+        self.lcd.draw_text(20, 30, self.lcd.FONT_6X16, self.lcd.COLOR_BLACK, humidity)
+        self.lcd.draw_text(49, 30, self.lcd.FONT_6X16, self.lcd.COLOR_BLACK, last_sound)
         self.lcd.draw_text(68, 0,  self.lcd.FONT_6X16, self.lcd.COLOR_BLACK, pressure)
-        self.lcd.draw_text(78, 30, self.lcd.FONT_6X16, self.lcd.COLOR_BLACK, iaq)
+        self.lcd.draw_text(82, 30, self.lcd.FONT_6X16, self.lcd.COLOR_BLACK, iaq)
 
         if iaq_value < 70:
             self.draw_icon(105, 29, icons.IconThumbsUp)
