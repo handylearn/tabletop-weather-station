@@ -11,13 +11,15 @@ This fork adds suport for the tinkerforge sound pressure sensor and the RGB-Led
 
 Currently I have added:
 
-* current decibel value on the first screen in a new column
+* display of current decibel value on the first screen in a new column
 * storing the decibel value in the sqlite db, like all other values
 * graphics screen like the other screens for temperature, humidity, etc.
-* if the led-bricklet is connected, it changes the color occording to the sound level:
-  * green for less than 55 decibel, suitable for knowledge work
-  * yellow for 55-70 db, suitable for simple work
-  * orange for more than 70 db
-  * red for more than 80 db
+* if the led-bricklet is connected, it changes the color according to the sound level:
+    * green for less than 55 decibel, suitable for knowledge work
+    * yellow for 55-70 db, suitable for simple work
+    * orange for more than 70 db
+    * red for more than 80 db
 
+![The start screen of the weather station shows also the sound pressure in decibel](demo/screenshots/weatherstation-start-320.jpg "Start screen with decibel value")
 
+![A graph that shows how the decibel values changes over time](demo/screenshots/weatherstation-decibelgraph-320.jpg "Screen with graph of decibel values over time")
