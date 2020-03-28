@@ -20,6 +20,6 @@ Currently I have added:
     * orange for more than 70 db
     * red for more than 80 db
 
-![The start screen of the weather station shows also the sound pressure in decibel](/demo/screenshots/weatherstation-start-320.jpg)
+![The start screen of the weather station shows also the sound pressure in decibel](/demo/screenshots/weatherstation-start-320.jpg?raw=true)
 
 ![A graph that shows how the decibel values changes over time](/demo/screenshots/weatherstation-decibelgraph-320.jpg)
